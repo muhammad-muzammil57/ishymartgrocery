@@ -87,10 +87,7 @@ function DeliveryBoy() {
     const socket = getSocket()
     socket.connect()
 
-    if (online) {
-      socket.emit('deliveryBoy:online', { deliveryBoyId: session.user.id })
-      fetchBroadcasts()
-    }
+    
 
     // Naya order broadcast aaya
     socket.on('delivery:newBroadcast', (assignment: any) => {
@@ -112,6 +109,8 @@ function DeliveryBoy() {
       setOtpCode('')
       fetchStats()
     })
+          fetchStats()
+      fetchBroadcasts()
 
     // Active order ka status kisi wajah se badla (e.g. admin ne cancel kiya)
     socket.on('order:statusUpdate', ({ status }: { status: string }) => {
@@ -119,6 +118,9 @@ function DeliveryBoy() {
       if (!current) return
       if (status === 'cancelled' || status === 'delivered') {
         setActiveOrder(null)
+              if (status === 'cancelled' || status === 'delivered') {
+        setActiveOrder(null)
+        fetchBroadcasts()
       } else {
         setActiveOrder((prev: any) => (prev ? { ...prev, status } : prev))
       }
@@ -132,8 +134,17 @@ function DeliveryBoy() {
       disconnectSocket()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user?.id, online])
-
+  }, [session?.user?.id])
+    useEffect(() => {
+    if (!session?.user?.id) return
+    const socket = getSocket()
+    if (online) {
+      socket.emit('deliveryBoy:online', { deliveryBoyId: session.user.id })
+      fetchBroadcasts()
+    } else {
+      socket.emit('deliveryBoy:offline')
+    }
+  }, [online, session?.user?.id])
   // Jab active order badle, us order ke room mein join/leave karo taa k
   // uski status updates real-time milti rahen
   useEffect(() => {
@@ -171,17 +182,12 @@ function DeliveryBoy() {
     }
   }, [activeOrder])
 
-  const toggleOnline = async () => {
+   const toggleOnline = async () => {
     const next = !online
     setOnline(next)
     try {
       await axios.post('/api/delivery/status', { isOnline: next })
-      const socket = getSocket()
-      if (next) {
-        socket.emit('deliveryBoy:online', { deliveryBoyId: session?.user?.id })
-        fetchBroadcasts()
-      } else {
-        socket.emit('deliveryBoy:offline')
+      if (!next) {
         setBroadcasts([])
       }
     } catch {
