@@ -17,15 +17,16 @@ function OrderChatWidget({ orderId, role }: { orderId: string; role: 'buyer' | '
   const [suggestions, setSuggestions] = useState<string[]>([])
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
   const endRef = useRef<HTMLDivElement>(null)
+  const hasSentRef = useRef(false)
 
   const fetchMessages = async () => {
-    try {
-      const res = await axios.get(`/api/order-chat/${orderId}`)
-      setMessages(res.data.messages)
-    } catch {
-      // ignore
-    }
+  try {
+    const res = await axios.get(`/api/order-chat/${orderId}`)
+    setMessages((prev) => (hasSentRef.current ? prev : res.data.messages))
+  } catch {
+    // ignore
   }
+}
 
   // ─── Ek dafa purane messages le lo, us k baad naye messages Socket.IO se
   // real-time aayenge (parent component — DeliveryBoy/TrackOrderPage —
@@ -54,17 +55,26 @@ function OrderChatWidget({ orderId, role }: { orderId: string; role: 'buyer' | '
   }, [messages])
 
   const send = async (overrideText?: string) => {
-    const value = (overrideText ?? text).trim()
-    if (!value) return
-    setText('')
-    setSuggestions([])
-    try {
-      const res = await axios.post(`/api/order-chat/${orderId}`, { text: value })
-      setMessages(res.data.messages)
-    } catch {
-      // ignore
-    }
+  const value = (overrideText ?? text).trim()
+  if (!value) return
+  hasSentRef.current = true
+  setText('')
+  setSuggestions([])
+
+  const optimisticMsg: ChatMessage = {
+    sender: role,
+    senderId: 'me',
+    text: value,
+    createdAt: new Date().toISOString(),
   }
+  setMessages((prev) => [...prev, optimisticMsg])
+
+  try {
+    await axios.post(`/api/order-chat/${orderId}`, { text: value })
+  } catch {
+    setMessages((prev) => prev.filter((m) => m !== optimisticMsg))
+  }
+}
 
   const getSuggestions = async () => {
     setLoadingSuggestions(true)
