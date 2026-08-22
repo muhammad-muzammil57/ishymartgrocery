@@ -15,7 +15,7 @@ export async function GET() {
     // boy ko bheji gayi hain, aur usne khud reject nahi ki
     const assignments = await DeliveryAssignment.find({
       status: "brodcasted",
-      brodcastedTo: session.user.id,
+     
       rejectedBy: { $ne: session.user.id },
     })
       .populate({
