@@ -1,6 +1,6 @@
 import React from 'react'
 import AdminMessages from '@/components/AdminMessages'
-import AdminMessages from '@/components/SecondNavbarLinks'
+import SecondNavbarLinks from '@/components/SecondNavbarLinks'
 
 function AdminDashboard() {
   return (
