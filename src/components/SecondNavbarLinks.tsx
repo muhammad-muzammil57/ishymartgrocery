@@ -4,7 +4,7 @@ import Link from 'next/link'; // Agar Next.js hai
 
 export default function Navbar() {
   return (
-    <nav className="mt-[14px] bg-[#e8f5e9] p-4 flex justify-between items-center shadow-sm">
+    <nav className="mt-[42px] bg-[#e8f5e9] p-4 flex justify-between items-center shadow-sm">
       {/* Logo Section */}
       <div className="text-xl font-bold text-emerald-800">
         Logo
