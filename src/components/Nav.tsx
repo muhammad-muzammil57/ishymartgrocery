@@ -30,6 +30,7 @@ import dynamic from "next/dynamic";
 const SupportWidget = dynamic(() => import('./SupportWidget'), { ssr: false })
 const MessagesWidget = dynamic(() => import('./MessagesWidget'), { ssr: false })
 const SellerSubNav = dynamic(() => import('./SellerSubNav'), { ssr: false })
+const SearchBar = dynamic(() => import('./SearchBar'), { ssr: false })
 
 interface IUser {
   _id?: mongoose.Types.ObjectId;
@@ -100,7 +101,7 @@ function Nav({ user }: { user: IUser }) {
             </div>
 
             <div className="flex flex-col gap-3 font-medium mt-6">
-               <Link href={"/admin/add-grocery"} className="flex items-center gap-3 p-3 rounded-lg bg-white/10 hover:bg-white/20 transition-all hover:pl-4 ml-2 mr-2">
+              <Link href={"/admin/add-grocery"} className="flex items-center gap-3 p-3 rounded-lg bg-white/10 hover:bg-white/20 transition-all hover:pl-4 ml-2 mr-2">
                 <PlusCircle className="w-5 h-5" /> Add Grocery
               </Link>
               <Link href={"/admin/view-grocery"} className="flex items-center gap-3 p-3 rounded-lg bg-white/10 hover:bg-white/20 transition-all hover:pl-4 ml-2 mr-2">
@@ -108,7 +109,7 @@ function Nav({ user }: { user: IUser }) {
               </Link>
               <Link href={"/admin/mange-orders"} className="flex items-center gap-3 p-3 rounded-lg bg-white/10 hover:bg-white/20 transition-all hover:pl-4 ml-2 mr-2">
                 <ClipboardCheck className="w-5 h-5" /> Mange Oders
-              </Link> 
+              </Link>
               <Link href={"/admin/seller-applications"} className="flex items-center gap-3 p-3 rounded-lg bg-white/10 hover:bg-white/20 transition-all hover:pl-4 ml-2 mr-2">
                 <Store className="w-5 h-5" /> Seller Applications
               </Link>
@@ -170,14 +171,9 @@ function Nav({ user }: { user: IUser }) {
       </Link>
 
       {user.role == "user" && (
-        <form className="hidden md:flex items-center bg-white rounded-full px-4 py-3 w-1/2 max-w-lg shadow-md">
-          <Search className="text-gray-500 w-5 h-5 mr-2 ml-2" />
-          <input
-            type="text"
-            placeholder="Search which you need...?"
-            className="w-full outline-none text-gray-700 placeholder:text-gray-400"
-          />
-        </form>
+        <div className="hidden md:block w-1/2 max-w-lg">
+          <SearchBar variant="desktop" />
+        </div>
       )}
 
       <div className="flex items-center gap-3 md:gap-6 relative">
@@ -223,7 +219,7 @@ function Nav({ user }: { user: IUser }) {
         {user.role == "admin" && (
           <>
             <div className="hidden md:flex items-center gap-4">
-              {/* <Link href={"/admin/add-grocery"} className="flex items-center gap-2 bg-white text-green-700 font-semibold px-4 py-2 rounded-full hover:bg-green-100 transition-all">
+              <Link href={"/admin/add-grocery"} className="flex items-center gap-2 bg-white text-green-700 font-semibold px-4 py-2 rounded-full hover:bg-green-100 transition-all">
                 <PlusCircle className="w-5 h-5" /> Add Grocery
               </Link>
               <Link href={"/admin/view-grocery"} className="flex items-center gap-2 bg-white text-green-700 font-semibold px-4 py-2 rounded-full hover:bg-green-100 transition-all">
@@ -231,7 +227,7 @@ function Nav({ user }: { user: IUser }) {
               </Link>
               <Link href={"/admin/mange-orders"} className="flex items-center gap-2 bg-white text-green-700 font-semibold px-4 py-2 rounded-full hover:bg-green-100 transition-all">
                 <ClipboardCheck className="w-5 h-5" /> Mange Oders
-              </Link> */}
+              </Link>
               <Link href={"/admin/bulk-email"} className="flex items-center gap-2 bg-white text-green-700 font-semibold px-4 py-2 rounded-full hover:bg-green-100 transition-all">
                 <ClipboardCheck className="w-5 h-5" /> Send Bulk Emails
               </Link>
@@ -328,14 +324,11 @@ function Nav({ user }: { user: IUser }) {
                 exit={{ opacity: 0, y: -10, scale: 0.95 }}
                 className="fixed top-24 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-white rounded-full shadow-lg flex items-center px-4 py-3 z-50"
               >
-                <Search className="text-gray-500 w-5 h-5 mr-2" />
-                <form className="grow">
-                  <input
-                    type="text"
-                    placeholder="Search which you need...?"
-                    className="w-full outline-none text-gray-700 placeholder:text-gray-400"
-                  />
-                </form>
+                <SearchBar
+                  variant="mobile"
+                  autoFocus
+                  onNavigate={() => setSearchBarOpen(false)}
+                />
                 <button onClick={() => setSearchBarOpen(false)}>
                   <X className="text-gray-500 w-5 h-5" />
                 </button>
