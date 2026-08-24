@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { Send, ShieldCheck, X, Paperclip, FileText, Image as ImageIcon, Loader2 } from 'lucide-react'
+import { Send, ShieldCheck, X, Paperclip, FileText, Image as ImageIcon, Loader2, KeyRound, RefreshCw } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useParams, useRouter } from 'next/navigation'
 import { getSocket, disconnectSocket } from '@/app/lib/socket'
@@ -19,7 +19,7 @@ interface Message {
 }
 
 export default function AdminLiveChat() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const params = useParams()
   const router = useRouter()
   const roomId = params.roomId as string
@@ -28,6 +28,15 @@ export default function AdminLiveChat() {
   const [joining, setJoining] = useState(false)
   const [alreadyTaken, setAlreadyTaken] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
+
+  // ─── Security code (2nd factor) state ───────────────────────────
+  const [codeVerified, setCodeVerified] = useState(false)
+  const [codeInput, setCodeInput] = useState('')
+  const [verifying, setVerifying] = useState(false)
+  const [codeError, setCodeError] = useState('')
+  const [resending, setResending] = useState(false)
+  const [resendMsg, setResendMsg] = useState('')
+  const joinTokenRef = useRef<string | null>(null)
   const [inputText, setInputText] = useState('')
   const [userTyping, setUserTyping] = useState(false)
   const [fileUploading, setFileUploading] = useState(false)
@@ -41,13 +50,58 @@ export default function AdminLiveChat() {
     setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
   }
 
+  // ─── Verify emailed security code → issue signed join token ─────
+  const handleVerifyCode = async () => {
+    if (!codeInput.trim()) return
+    setVerifying(true)
+    setCodeError('')
+    try {
+      const res = await axios.post(`/api/admin/livechat/${roomId}/verify-code`, {
+        code: codeInput.trim(),
+      })
+      joinTokenRef.current = res.data.token
+      setCodeVerified(true)
+    } catch (err: any) {
+      setCodeError(err?.response?.data?.message || 'Code verify nahi ho saka.')
+    } finally {
+      setVerifying(false)
+    }
+  }
+
+  const handleResendCode = async () => {
+    setResending(true)
+    setResendMsg('')
+    setCodeError('')
+    try {
+      await axios.post(`/api/admin/livechat/${roomId}/resend-code`)
+      setResendMsg('Naya code aapke email par bhej diya gaya hai.')
+    } catch (err: any) {
+      setCodeError(err?.response?.data?.message || 'Code resend nahi ho saka.')
+    } finally {
+      setResending(false)
+    }
+  }
+
   const handleJoin = () => {
+    if (!joinTokenRef.current) {
+      setCodeError('Pehle security code verify karein.')
+      return
+    }
     setJoining(true)
     const socket = getSocket()
     socket.connect()
 
     socket.on('chat:already-taken', () => {
       setAlreadyTaken(true)
+      setJoining(false)
+      disconnectSocket()
+    })
+
+    // Server (socketServer) is token ko independently verify karta hai —
+    // client se bheja gaya adminId/adminName sirf display ke liye hai,
+    // asal identity token ke andar signed hoti hai.
+    socket.on('chat:error', ({ message }: { message: string }) => {
+      setCodeError(message || 'Join fail ho gaya — dobara try karein.')
       setJoining(false)
       disconnectSocket()
     })
@@ -88,6 +142,7 @@ export default function AdminLiveChat() {
       roomId,
       adminId: session?.user?.id,
       adminName: session?.user?.name,
+      token: joinTokenRef.current,
     })
 
     setTimeout(() => {
@@ -255,6 +310,81 @@ export default function AdminLiveChat() {
     )
   }
 
+  // ─── Defense in depth: middleware already blocks non-admins, lekin
+  // client-side session load hone tak / role mismatch hone par bhi
+  // koi UI leak na ho ────────────────────────────────────────────
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <Loader2 className="w-8 h-8 text-green-600 animate-spin" />
+      </div>
+    )
+  }
+  if (status === 'unauthenticated' || session?.user?.role !== 'admin') {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-sm text-center space-y-3">
+          <X className="w-14 h-14 text-red-400 mx-auto" />
+          <h2 className="text-lg font-bold text-red-600">Unauthorized</h2>
+          <p className="text-gray-500 text-sm">Sirf admin account is page ko access kar sakta hai.</p>
+        </div>
+      </div>
+    )
+  }
+
+  // ─── Security gate: emailed code verify hone tak join screen bhi
+  // nahi dikhti ─────────────────────────────────────────────────
+  if (!codeVerified) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-2xl shadow-lg p-8 max-w-sm text-center space-y-5"
+        >
+          <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto">
+            <KeyRound className="w-8 h-8 text-green-400" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-gray-800">Security Code Enter Karein</h2>
+            <p className="text-gray-500 text-sm mt-1">
+              Aapke email par bheja gaya 6-digit code yahan enter karein
+            </p>
+          </div>
+          <input
+            type="text"
+            inputMode="numeric"
+            maxLength={6}
+            value={codeInput}
+            onChange={(e) => setCodeInput(e.target.value.replace(/\D/g, ''))}
+            onKeyDown={(e) => e.key === 'Enter' && handleVerifyCode()}
+            placeholder="000000"
+            className="w-full text-center text-2xl tracking-[0.5em] font-mono border-2 border-gray-200 rounded-xl py-3 focus:outline-none focus:border-green-500"
+          />
+          {codeError && (
+            <p className="text-red-600 text-xs bg-red-50 border border-red-200 rounded-lg p-2">{codeError}</p>
+          )}
+          {resendMsg && (
+            <p className="text-green-700 text-xs bg-green-50 border border-green-200 rounded-lg p-2">{resendMsg}</p>
+          )}
+          <button
+            onClick={handleVerifyCode}
+            disabled={verifying || codeInput.length < 6}
+            className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md"
+          >
+            {verifying ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <>Verify Code</>}
+          </button>
+          <button
+            onClick={handleResendCode}
+            disabled={resending}
+            className="w-full text-green-700 text-xs font-semibold flex items-center justify-center gap-1.5 hover:underline"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${resending ? 'animate-spin' : ''}`} />
+            Naya code mangwayein
+          </button>
+        </motion.div>
+      </div>
+    )
+  }
+
   if (!joined) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -272,6 +402,9 @@ export default function AdminLiveChat() {
             <p className="text-green-700 text-xs font-medium mb-1">Room ID:</p>
             <p className="text-green-800 font-mono text-xs break-all">{roomId}</p>
           </div>
+          {codeError && (
+            <p className="text-red-600 text-xs bg-red-50 border border-red-200 rounded-lg p-2">{codeError}</p>
+          )}
           <p className="text-amber-600 text-xs bg-amber-50 border border-amber-200 rounded-lg p-3">
             ⚠️ Agar aap join kar lein toh doosra admin join nahi kar sakega
           </p>
