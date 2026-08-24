@@ -5,11 +5,16 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
   // Payment pages public hain
+  // ⚠️ SECURITY FIX: "/admin/livechat" yahan se HATA diya gaya hai — pehle
+  // yeh route bilkul public tha (login check bhi skip hota tha), matlab
+  // roomId link milte hi koi bhi (bina login) "admin" ban kar customer se
+  // chat kar sakta tha. Ab yeh normal "/admin/*" flow follow karega:
+  // login + role==="admin" zaroori (neeche wala generic check). Extra
+  // security (emailed code) khud page/API level par hai.
   if (
     pathname.startsWith("/payment/success") ||
     pathname.startsWith("/payment/cancelled") ||
-    pathname.startsWith("/api/payment/webhook") ||
-    pathname.startsWith("/admin/livechat")
+    pathname.startsWith("/api/payment/webhook")
   ) {
     return NextResponse.next()
   }
