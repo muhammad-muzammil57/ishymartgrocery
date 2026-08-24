@@ -18,6 +18,14 @@ interface IChat {
   status: "waiting" | "active" | "closed"
   messages: IMessage[]
   createdAt: Date
+
+  // ─── Security code (2nd factor) ────────────────────────────────
+  // Admin ko email par jo 6-digit code jata hai, uska plain text kabhi
+  // DB mein store nahi hota — sirf hash. Jab tak yeh verify na ho, koi
+  // bhi (chahe admin login bhi kyun na ho) chat join nahi kar sakta.
+  joinCodeHash?: string | null
+  joinCodeExpiresAt?: Date | null
+  joinCodeAttempts?: number
 }
 
 const messageSchema = new mongoose.Schema<IMessage>({
@@ -41,6 +49,10 @@ const chatSchema = new mongoose.Schema<IChat>(
       default: "waiting",
     },
     messages: [messageSchema],
+
+    joinCodeHash: { type: String, default: null },
+    joinCodeExpiresAt: { type: Date, default: null },
+    joinCodeAttempts: { type: Number, default: 0 },
   },
   { timestamps: true }
 )
