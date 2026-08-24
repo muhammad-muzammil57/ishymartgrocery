@@ -6,6 +6,9 @@ import { auth } from "@/auth"
 import { NextRequest, NextResponse } from "next/server"
 import { v4 as uuidv4 } from "uuid"
 import nodemailer from "nodemailer"
+import { generateJoinCode, hashJoinCode } from "@/app/lib/joinToken"
+
+const JOIN_CODE_TTL_MS = 15 * 60 * 1000 // 15 minute
 
 function createTransporter() {
   return nodemailer.createTransport({
@@ -22,7 +25,8 @@ async function sendAdminChatAlert(
   adminName: string,
   userName: string,
   userEmail: string,
-  roomId: string
+  roomId: string,
+  joinCode: string
 ) {
   const transporter = createTransporter()
   const joinUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://ishymart-grocery.vercel.app"}/admin/livechat/${roomId}`
@@ -55,6 +59,11 @@ async function sendAdminChatAlert(
           </tr>
         </table>
       </div>
+      <div style="background:#111827;border-radius:12px;padding:18px 20px;margin-bottom:20px;text-align:center;">
+        <p style="margin:0 0 6px;color:#9ca3af;font-size:11px;letter-spacing:1px;text-transform:uppercase;">🔒 Security Code (link kholne ke baad yeh enter karein)</p>
+        <p style="margin:0;color:#4ade80;font-size:32px;font-weight:800;letter-spacing:8px;font-family:monospace;">${joinCode}</p>
+        <p style="margin:8px 0 0;color:#9ca3af;font-size:11px;">Yeh code sirf 15 minute ke liye valid hai. Kisi ke saath share na karein.</p>
+      </div>
       <div style="text-align:center;">
         <a href="${joinUrl}"
           style="display:inline-block;background:#16a34a;color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:50px;font-weight:700;font-size:15px;">
@@ -62,7 +71,7 @@ async function sendAdminChatAlert(
         </a>
       </div>
       <p style="color:#9ca3af;font-size:12px;margin-top:16px;text-align:center;">
-        Sirf ek admin join kar sakta hai. Pehle join karne wala connect hoga.
+        Link kholne ke baad login + upar wala security code dono chahiye honge. Sirf ek admin join kar sakta hai — pehle join karne wala connect hoga.
       </p>
     </div>
     <div style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:16px 32px;text-align:center;">
@@ -96,6 +105,11 @@ export async function POST(req: NextRequest) {
 
     const roomId = uuidv4()
 
+    // ─── Security code (2nd factor) ──────────────────────────────
+    // Plain code kabhi DB mein save nahi hota — sirf hash. Email mein
+    // jo plain code jayega, wahi admin ko manually enter karna hoga.
+    const joinCode = generateJoinCode()
+
     // Create chat room
     await Chat.create({
       roomId,
@@ -104,6 +118,9 @@ export async function POST(req: NextRequest) {
       userEmail,
       status: "waiting",
       messages: [],
+      joinCodeHash: hashJoinCode(roomId, joinCode),
+      joinCodeExpiresAt: new Date(Date.now() + JOIN_CODE_TTL_MS),
+      joinCodeAttempts: 0,
     })
 
     // Find all admins
@@ -117,7 +134,8 @@ export async function POST(req: NextRequest) {
           admin.name,
           userName,
           userEmail,
-          roomId
+          roomId,
+          joinCode
         ).catch((err) => console.error(`Email to ${admin.email} failed:`, err))
       )
     )
