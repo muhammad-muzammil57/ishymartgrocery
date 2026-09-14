@@ -351,8 +351,7 @@ function Nav({ user }: { user: IUser }) {
     </div>
     <AiChatWidget />
     </>
-  );
-    </div>
+ 
   );
 }
 
