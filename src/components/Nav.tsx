@@ -31,6 +31,7 @@ const SupportWidget = dynamic(() => import('./SupportWidget'), { ssr: false })
 const MessagesWidget = dynamic(() => import('./MessagesWidget'), { ssr: false })
 const SellerSubNav = dynamic(() => import('./SellerSubNav'), { ssr: false })
 const SearchBar = dynamic(() => import('./SearchBar'), { ssr: false })
+const AiChatWidget = dynamic(() => import('./AiChatWidget'), { ssr: false })
 
 interface IUser {
   _id?: mongoose.Types.ObjectId;
@@ -343,6 +344,7 @@ function Nav({ user }: { user: IUser }) {
       {SideBar}
       {SupportPortal}
       {MessagesPortal}
+      <AiChatWidget />
 
       {/* Selling account sub-nav — sirf normal user account ke liye, admin/delivery boy ke liye nahi */}
       {user.role == "user" && <SellerSubNav />}
