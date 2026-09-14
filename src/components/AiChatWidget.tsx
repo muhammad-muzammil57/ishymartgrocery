@@ -62,10 +62,10 @@ export default function AiChatWidget() {
 
   return (
     <>
-      {/* Floating button — left side */}
+      {/* Floating button — bottom right, fixed while scrolling */}
       <button
         onClick={() => setOpen((p) => !p)}
-        className="fixed bottom-6 left-4 sm:left-6 z-[60] bg-green-700 hover:bg-green-800 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg shadow-green-900/30 hover:scale-105 transition-all"
+        className="fixed bottom-6 right-4 sm:right-6 z-[60] bg-green-700 hover:bg-green-800 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg shadow-green-900/30 hover:scale-105 transition-all"
         title="AI Assistant"
       >
         {open ? <X className="w-6 h-6" /> : <Bot className="w-6 h-6" />}
@@ -78,7 +78,7 @@ export default function AiChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-24 left-4 sm:left-6 z-[60] w-[90vw] max-w-sm h-[70vh] max-h-[520px] bg-white rounded-2xl shadow-2xl border border-green-100 flex flex-col overflow-hidden"
+            className="fixed bottom-24 right-4 sm:right-6 z-[60] w-[90vw] max-w-sm h-[70vh] max-h-[520px] bg-white rounded-2xl shadow-2xl border border-green-100 flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-green-700 to-green-600 text-white px-4 py-3 flex items-center gap-2">
