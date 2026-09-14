@@ -156,8 +156,9 @@ function Nav({ user }: { user: IUser }) {
   : null;
 
 
-  return (
-    <div className="w-[95%] fixed top-4 left-1/2 -translate-x-1/2 bg-linear-to-r from-green-500 to-green-700 rounded-2xl shadow-lg shadow-black/30 flex justify-between items-center h-20 px-4 md:px-8 z-50">
+ return (
+  <>
+  <div className="w-[95%] fixed top-4 left-1/2 -translate-x-1/2 bg-linear-to-r from-green-500 to-green-700 rounded-2xl shadow-lg shadow-black/30 flex justify-between items-center h-20 px-4 md:px-8 z-50">
       <Link
         href={"/"}
         className="hidden md:block text-white font-extrabold text-2xl sm:text-3xl tracking-wide hover:scale-105 transition-transform"
@@ -341,13 +342,16 @@ function Nav({ user }: { user: IUser }) {
 
       {/* ✅ YEH CHANGE KIYA: SideBar aur SupportPortal dono
           return ke end mein hain — Nav ke bahar document.body mein render honge */}
-      {SideBar}
+            {SideBar}
       {SupportPortal}
       {MessagesPortal}
-      <AiChatWidget />
 
       {/* Selling account sub-nav — sirf normal user account ke liye, admin/delivery boy ke liye nahi */}
       {user.role == "user" && <SellerSubNav />}
+    </div>
+    <AiChatWidget />
+    </>
+  );
     </div>
   );
 }
