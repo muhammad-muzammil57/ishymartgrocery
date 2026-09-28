@@ -45,6 +45,7 @@ export async function middleware(req: NextRequest) {
     pathname === "/user/checkout" ||
     pathname.startsWith("/search") ||
     pathname.startsWith("/mat/") ||
+    pathname.startsWith("/imu/") ||
     pathname.startsWith("/legal") ||
     (/^\/seller\/[^/]+$/.test(pathname) && !sellerPrivate.includes(pathname))
 
