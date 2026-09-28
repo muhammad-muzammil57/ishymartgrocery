@@ -2,6 +2,7 @@ import connectDb from "@/app/lib/db"
 import SellerApplication from "@/app/Models/sellerApplication.model"
 import User from "@/app/Models/user.model"
 import { auth } from "@/auth"
+import { generateUniqueStoreSlug } from "@/app/lib/storeSlug"
 import { sendSellerApplicationDecisionEmail } from "@/app/lib/mailer"
 import { NextRequest, NextResponse } from "next/server"
 
@@ -54,6 +55,13 @@ export async function POST(
     if (action === "approve") {
       user.sellerStatus = "approved"
       user.isSeller = true
+      // Store ka public URL (/imu/<storeName>) — sirf pehli dafa banta hai
+      if (!user.storeSlug) {
+        user.storeSlug = await generateUniqueStoreSlug(
+          user.storeName || application.storeName || user.name,
+          user._id
+        )
+      }
     } else {
       user.sellerStatus = "rejected"
       user.isSeller = false
