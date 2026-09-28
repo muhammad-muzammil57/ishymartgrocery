@@ -25,7 +25,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // Token check — production mein cookieName explicitly dena zaroori hai
+  // Token nikalo (production mein cookieName explicitly dena zaroori hai)
   const token = await getToken({
     req,
     secret: process.env.AUTH_SECRET,
@@ -35,7 +35,20 @@ export async function middleware(req: NextRequest) {
         : "authjs.session-token",
   })
 
+  // Guest (bina login) ke liye open pages: home (products), cart, checkout,
+  // search, seller public profile aur legal pages. Order place karte waqt
+  // login mangta hai (checkout page + /api/user/order server par check).
+  const sellerPrivate = ["/seller/apply", "/seller/pending", "/seller/orders", "/seller/dashboard", "/seller/withdrawals"]
+  const isGuestAllowed =
+    pathname === "/" ||
+    pathname === "/user/cart" ||
+    pathname === "/user/checkout" ||
+    pathname.startsWith("/search") ||
+    pathname.startsWith("/legal") ||
+    (/^\/seller\/[^/]+$/.test(pathname) && !sellerPrivate.includes(pathname))
+
   if (!token) {
+    if (isGuestAllowed) return NextResponse.next()
     const loginUrl = new URL("/login", req.url)
     loginUrl.searchParams.set("callbackURL", req.url)
     return NextResponse.redirect(loginUrl)
