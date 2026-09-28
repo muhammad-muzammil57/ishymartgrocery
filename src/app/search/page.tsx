@@ -12,6 +12,7 @@ interface SellerResult {
   _id: string
   name: string
   storeName?: string
+  storeSlug?: string
   image?: string
 }
 
@@ -74,7 +75,7 @@ function SearchResultsInner() {
                   {sellers.map((s) => (
                     <Link
                       key={s._id}
-                      href={`/seller/${s._id}`}
+                      href={s.storeSlug ? `/imu/${s.storeSlug}` : `/seller/${s._id}`}
                       className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all p-4 flex items-center gap-3"
                     >
                       <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0 overflow-hidden">
