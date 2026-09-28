@@ -28,7 +28,7 @@ function ProductDetail({ item }: { item: IGrocery }) {
 
           {item.seller && (
             <Link
-              href={`/seller/${item.seller._id}`}
+              href={item.seller.storeSlug ? `/imu/${item.seller.storeSlug}` : `/seller/${item.seller._id}`}
               className='flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-full px-3 py-1 w-fit hover:bg-amber-100 transition-colors'
             >
               <Store className='w-3 h-3' />
