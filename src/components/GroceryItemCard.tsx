@@ -20,6 +20,7 @@ export interface IGrocery{
       _id: mongoose.Types.ObjectId
       name: string
       storeName?: string
+      storeSlug?: string
       image?: string
     } | null,
 
@@ -68,7 +69,7 @@ function GroceryItemCard({item, sellerRating}:{item:IGrocery, sellerRating?: { a
           taake buyer ko pata rahe kon sell kar raha hai */}
       {item.seller && (
         <Link
-          href={`/seller/${item.seller._id}`}
+          href={item.seller.storeSlug ? `/imu/${item.seller.storeSlug}` : `/seller/${item.seller._id}`}
           className='flex items-center justify-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-full px-2 py-1 mt-1 mx-auto hover:bg-amber-100 transition-colors'
         >
           <Store className='w-3 h-3' />
