@@ -1,5 +1,6 @@
 import connectDb from "@/app/lib/db"
 import Grocery from "@/app/Models/grocery.model"
+import { backfillProductNumbers } from "@/app/lib/productNumber"
 import { auth } from "@/auth"
 import { NextResponse } from "next/server"
 
@@ -15,6 +16,7 @@ export async function GET() {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
     }
 
+    await backfillProductNumbers()
     const groceries = await Grocery.find({})
       .populate("seller", "name storeName image")
       .sort({ createdAt: -1 })
