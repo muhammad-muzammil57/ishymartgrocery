@@ -15,8 +15,15 @@ async function Home(){
 await connectDb()
 const session = await auth()
 
+// Guest (bina login) ko bhi products wala home page dikhao
 if(!session?.user){
-  redirect("/login")
+  return (
+    <>
+      <Nav user={null}/>
+      <UserDashboard/>
+      <Footer />
+    </>
+  )
 }
 
 const user=await User.findById(session?.user?.id)
