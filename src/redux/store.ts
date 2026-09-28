@@ -13,10 +13,18 @@ const persistConfig = {
 
 const persistedUserReducer = persistReducer(persistConfig, userSlice);
 
+// Cart sessionStorage mein save hota hai taake login (Google redirect) ke baad
+// bhi guest ka cart na jaye. Tab band hone par khud clear ho jata hai.
+const cartPersistConfig = {
+  key: "cart",
+  storage: require("redux-persist/lib/storage/session").default,
+};
+const persistedCartReducer = persistReducer(cartPersistConfig, cartSlice);
+
 export const store = configureStore({
   reducer: {
     user: persistedUserReducer,
-    cart: cartSlice,
+    cart: persistedCartReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
