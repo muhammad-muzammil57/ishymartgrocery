@@ -12,6 +12,7 @@
 import connectDb from "@/app/lib/db"
 import Grocery from "@/app/Models/grocery.model"
 import { backfillProductNumbers } from "@/app/lib/productNumber"
+import { backfillStoreSlugs } from "@/app/lib/storeSlug"
 import User from "@/app/Models/user.model"
 import { NextRequest, NextResponse } from "next/server"
 
@@ -27,6 +28,7 @@ export async function GET(request: NextRequest) {
 
     await connectDb()
     await backfillProductNumbers()
+    await backfillStoreSlugs()
 
     // Regex special characters escape karo taa k user "a+b" jaisa kuch
     // type kare to crash na ho
@@ -35,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     const [products, sellers] = await Promise.all([
       Grocery.find({ $or: [{ name: regex }, { category: regex }] })
-        .populate("seller", "name storeName image")
+        .populate("seller", "name storeName storeSlug image")
         .limit(limit)
         .sort({ createdAt: -1 }),
 
@@ -44,7 +46,7 @@ export async function GET(request: NextRequest) {
         sellerStatus: "approved",
         $or: [{ storeName: regex }, { name: regex }],
       })
-        .select("name storeName image")
+        .select("name storeName storeSlug image")
         .limit(limit),
     ])
 
