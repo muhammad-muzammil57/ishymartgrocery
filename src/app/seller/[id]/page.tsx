@@ -4,6 +4,7 @@ import { ArrowLeft, Loader, Star, Store, User as UserIcon } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { motion } from 'motion/react'
 
 function Stars({ rating }: { rating: number }) {
@@ -87,7 +88,11 @@ function SellerProfilePage() {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {products.map((p: any) => (
-                <div key={p._id} className="border border-gray-100 rounded-2xl p-3">
+                <Link
+                  key={p._id}
+                  href={p.productNumber ? `/mat/${p.productNumber}` : '#'}
+                  className="border border-gray-100 rounded-2xl p-3 block hover:shadow-md transition-all"
+                >
                   {p.image && (
                     <div className="relative w-full aspect-square mb-2">
                       <Image src={p.image} alt={p.name} fill className="object-contain" />
@@ -95,7 +100,7 @@ function SellerProfilePage() {
                   )}
                   <p className="text-sm font-semibold text-green-700 truncate">{p.name}</p>
                   <p className="text-xs text-gray-500">Rs {p.price} / {p.unit}</p>
-                </div>
+                </Link>
               ))}
             </div>
           )}
