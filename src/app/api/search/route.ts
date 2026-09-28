@@ -11,6 +11,7 @@
 // GET /api/search?q=atta&limit=6
 import connectDb from "@/app/lib/db"
 import Grocery from "@/app/Models/grocery.model"
+import { backfillProductNumbers } from "@/app/lib/productNumber"
 import User from "@/app/Models/user.model"
 import { NextRequest, NextResponse } from "next/server"
 
@@ -25,6 +26,7 @@ export async function GET(request: NextRequest) {
     }
 
     await connectDb()
+    await backfillProductNumbers()
 
     // Regex special characters escape karo taa k user "a+b" jaisa kuch
     // type kare to crash na ho
