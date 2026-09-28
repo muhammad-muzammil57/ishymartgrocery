@@ -12,6 +12,21 @@ import Link from 'next/link'
 
 type Step = "credentials" | "otp"
 
+// Login ke baad kahan jana hai (e.g. checkout). Sirf same-site path allow hai.
+function getCallbackPath(): string {
+  if (typeof window === "undefined") return "/"
+  try {
+    const raw = new URLSearchParams(window.location.search).get("callbackURL")
+    if (!raw) return "/"
+    const u = new URL(raw, window.location.origin)
+    if (u.origin !== window.location.origin) return "/"
+    if (u.pathname.startsWith("/login") || u.pathname.startsWith("/register")) return "/"
+    return u.pathname + u.search
+  } catch {
+    return "/"
+  }
+}
+
 function Login() {
   const [step, setStep] = useState<Step>("credentials")
   const [email, setEmail] = useState("")
@@ -54,7 +69,7 @@ function Login() {
         setError("Entered Wrong OTP or has been Expired!")
       } else {
         router.refresh()           // pehle refresh — session set ho
-        router.push("/")           // phir navigate
+        router.push(getCallbackPath())           // phir navigate
       }
     } catch {
       setError("Login mein masla aaya. Dobara try karein.")
@@ -178,7 +193,7 @@ function Login() {
 
             <div
               className='cursor-pointer w-full flex items-center justify-center gap-3 border border-gray-300 hover:bg-gray-50 py-3 rounded-xl text-gray-700 font-medium transition-all duration-200'
-              onClick={() => signIn("google", { callbackUrl: "/" })}
+              onClick={() => signIn("google", { callbackUrl: getCallbackPath() })}
             >
               <Image src={googleImage} width={20} height={20} alt='Google' />
               Continue With Google
@@ -220,7 +235,7 @@ function Login() {
                   if (val.length === 6) signIn("credentials", { email, otp: val, redirect: false })
                     .then((result) => {
                       if (result?.error) setError("Entered Wrong OTP or has been Expired!")
-                      else { router.refresh(); router.push("/") }
+                      else { router.refresh(); router.push(getCallbackPath()) }
                     })
                 }}
                 value={otp}
