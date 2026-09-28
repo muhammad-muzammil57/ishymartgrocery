@@ -1,6 +1,7 @@
 // /mat/1000, /mat/1001 ... — har product ka apna direct link (ebay /itm/ jaisa)
 import connectDb from '@/app/lib/db'
 import { backfillProductNumbers } from '@/app/lib/productNumber'
+import { backfillStoreSlugs } from '@/app/lib/storeSlug'
 import Grocery from '@/app/Models/grocery.model'
 import User from '@/app/Models/user.model'
 import { auth } from '@/auth'
@@ -15,9 +16,10 @@ async function getProduct(productNumberParam: string) {
   if (!/^\d+$/.test(productNumberParam)) return null
   await connectDb()
   await backfillProductNumbers()
+  await backfillStoreSlugs()
   const product = await Grocery.findOne({ productNumber: Number(productNumberParam) }).populate(
     'seller',
-    'name storeName image'
+    'name storeName storeSlug image'
   )
   return product ? JSON.parse(JSON.stringify(product)) : null
 }
