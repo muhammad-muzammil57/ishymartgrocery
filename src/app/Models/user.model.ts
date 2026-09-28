@@ -30,6 +30,7 @@ isOnline:boolean
 isSeller:boolean
 sellerStatus:"none" | "pending" | "approved" | "rejected" | "suspended"
 storeName?:string
+storeSlug?:string
 sellerBalance?:number
 sellerSuspendReason?:string
 }
@@ -102,6 +103,12 @@ const userSchema = new mongoose.Schema<IUser>(
     storeName: {
       type: String,
       required: false,
+    },
+    // Public store URL: /imu/<storeSlug>
+    storeSlug: {
+      type: String,
+      unique: true,
+      sparse: true,
     },
     // Available balance the seller can withdraw (rupees)
     sellerBalance: {
