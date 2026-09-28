@@ -1,6 +1,7 @@
 import uploadOnCloudinary from "@/app/lib/cloudinary";
 import connectDb from "@/app/lib/db";
 import Grocery from "@/app/Models/grocery.model";
+import { getNextProductNumber } from "@/app/lib/productNumber";
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
         price,
         unit,
         category,
-        
+        productNumber: await getNextProductNumber(),
         image:imageUrl || ""
        })
 
