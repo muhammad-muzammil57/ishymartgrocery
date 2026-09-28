@@ -1,6 +1,7 @@
 import connectDb from "@/app/lib/db"
 import Feedback from "@/app/Models/feedback.model"
 import Grocery from "@/app/Models/grocery.model"
+import { backfillProductNumbers } from "@/app/lib/productNumber"
 import User from "@/app/Models/user.model"
 import { NextRequest, NextResponse } from "next/server"
 
@@ -21,6 +22,7 @@ export async function GET(
       return NextResponse.json({ message: "Seller not found" }, { status: 404 })
     }
 
+    await backfillProductNumbers()
     const products = await Grocery.find({ seller: id }).sort({ createdAt: -1 })
     // Seller ko jitne bhi feedback (kisi bhi product par) mile hon, sary k
     // sary yahan aa jayen — koi limit nahi
