@@ -15,6 +15,7 @@ export interface IGrocery{
     unit:string,
     image:string,
     category:string,
+    productNumber?:number,
     seller?: {
       _id: mongoose.Types.ObjectId
       name: string
@@ -43,12 +44,24 @@ function GroceryItemCard({item, sellerRating}:{item:IGrocery, sellerRating?: { a
     className='bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col'
     >
       <div className='relative w-full aspect-[4/3] bg-gray-50 overflow-hidden group'>
-        <Image src={item.image} alt={item.name} fill sizes='(max-width:768px) 100vw, 25vw' className='object-contain p-4 transition-transform duration-500 group-hover:scale-105'/>
+        {item.productNumber ? (
+          <Link href={`/mat/${item.productNumber}`} className='absolute inset-0 block'>
+            <Image src={item.image} alt={item.name} fill sizes='(max-width:768px) 100vw, 25vw' className='object-contain p-4 transition-transform duration-500 group-hover:scale-105'/>
+          </Link>
+        ) : (
+          <Image src={item.image} alt={item.name} fill sizes='(max-width:768px) 100vw, 25vw' className='object-contain p-4 transition-transform duration-500 group-hover:scale-105'/>
+        )}
         <div className='absolute inset-0 bg-linear-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300'/>
       </div>
 
       <div className='p-4 flex-1 flex flex-col justify-between'>
-      <h3 className='text-xl text-green-700 font-extrabold text-center mb-1'>⚘{item.name}⚘</h3>
+      <h3 className='text-xl text-green-700 font-extrabold text-center mb-1'>
+        {item.productNumber ? (
+          <Link href={`/mat/${item.productNumber}`} className='hover:underline'>⚘{item.name}⚘</Link>
+        ) : (
+          <>⚘{item.name}⚘</>
+        )}
+      </h3>
       <p className='text-xs text-gray-500 font-medium mb-1 text-center'>{item.category}</p>
 
       {/* Marketplace seller ka product ho to seller name + rating dikhao,
