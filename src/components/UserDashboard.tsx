@@ -5,10 +5,12 @@ import connectDb from '@/app/lib/db'
 import Grocery from '@/app/Models/grocery.model'
 import Feedback from '@/app/Models/feedback.model'
 import GroceryItemCard from './GroceryItemCard'
+import { backfillProductNumbers } from '@/app/lib/productNumber'
 import type { IGrocery } from './GroceryItemCard'
 
 async function UserDashboard() {
   await connectDb()
+  await backfillProductNumbers()
   const groceries = await Grocery.find({}).populate('seller', 'name storeName image')
   const plainGrocery = JSON.parse(JSON.stringify(groceries))
 
