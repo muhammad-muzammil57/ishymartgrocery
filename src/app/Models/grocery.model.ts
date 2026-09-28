@@ -9,6 +9,8 @@ interface IGrocery{
     category:string,
     // agar null/undefined hai to yeh product admin (IshyMart) ka apna stock hai
     seller?:mongoose.Types.ObjectId | null,
+    // Public product number — URL: /mat/1000, /mat/1001 ... (ebay style)
+    productNumber?:number,
 
     createdAt?:Date,
     updatedAt?:Date
@@ -60,6 +62,11 @@ const grocerySchema = new mongoose.Schema<IGrocery>({
         type:mongoose.Schema.Types.ObjectId,
         ref:"User",
         default:null
+    },
+    productNumber:{
+        type:Number,
+        unique:true,
+        sparse:true
     },
 
 },{
