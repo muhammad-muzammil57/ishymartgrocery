@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { Safepay } from "@sfpy/node-sdk"
 import dbConnect from "@/app/lib/db"
 import PendingOrder from "@/app/Models/PendingOrder"
+import { auth } from "@/auth"
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL!
 
@@ -17,6 +18,11 @@ function getSafepay() {
 
 export async function POST(req: NextRequest) {
   try {
+    // Bina login online payment/order bhi allowed nahi
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Please login to place an order" }, { status: 401 })
+    }
     await dbConnect()
 
     const body = await req.json()
@@ -48,7 +54,7 @@ export async function POST(req: NextRequest) {
     await PendingOrder.create({
       orderId,
       trackerToken: token,
-      userId: userData?._id || undefined,
+      userId: session.user.id,
       items: cartData.map((item: any) => ({
         grocery: item._id,
         name: item.name,
