@@ -2,6 +2,7 @@ import uploadOnCloudinary from "@/app/lib/cloudinary"
 import connectDb from "@/app/lib/db"
 import { checkRateLimit } from "@/app/lib/rateLimit"
 import Grocery from "@/app/Models/grocery.model"
+import { getNextProductNumber } from "@/app/lib/productNumber"
 import User from "@/app/Models/user.model"
 import { auth } from "@/auth"
 import { NextRequest, NextResponse } from "next/server"
@@ -65,6 +66,7 @@ export async function POST(request: NextRequest) {
       category,
       image: imageUrl || "",
       seller: user!._id,
+      productNumber: await getNextProductNumber(),
     })
 
     return NextResponse.json(product, { status: 201 })
