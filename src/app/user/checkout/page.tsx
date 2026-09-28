@@ -23,6 +23,7 @@ import MapViewWrapper from "@/components/MapViewWrapper"
 import axios from "axios"
 import { OpenStreetMapProvider } from "leaflet-geosearch"
 import { useSelector } from "react-redux"
+import { useSession } from "next-auth/react"
 import { RootState } from "@/redux/store"
 
 interface UserData {
@@ -39,6 +40,7 @@ export default function CheckoutPage() {
     (state: RootState) => state.cart
   )
   const userData = useGetMe() as UserData | null
+  const { status: authStatus } = useSession()
 
   // ===== ADDRESS STATE =====
   const [address, setAddress] = useState({
@@ -225,6 +227,12 @@ export default function CheckoutPage() {
   // ===== PLACE ORDER HANDLER =====
   const handlePlaceOrder = () => {
     setError(null)
+    // Bina login order place nahi ho sakta — login page par bhejo,
+    // login ke baad wapis checkout par aayega (cart save rehta hai)
+    if (authStatus !== "authenticated") {
+      router.push(`/login?callbackURL=${encodeURIComponent("/user/checkout")}`)
+      return
+    }
     if (paymentMethod === "cod") {
       handleCod()
     } else {
@@ -492,7 +500,7 @@ export default function CheckoutPage() {
           {/* Place Order Button */}
           <motion.button
             onClick={handlePlaceOrder}
-            disabled={loading}
+            disabled={loading || authStatus === "loading"}
             className="w-full mt-6 bg-green-600 text-white py-3.5 rounded-full font-bold text-base hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             whileTap={{ scale: 0.97 }}
           >
