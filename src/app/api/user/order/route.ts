@@ -3,11 +3,21 @@ import Order from "@/app/Models/order.model";
 import User from "@/app/Models/user.model";
 import Grocery from "@/app/Models/grocery.model";
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
 
 export async function POST(req:NextRequest) {
     try {
+        // Bina login koi order place nahi ho sakta
+        const session = await auth()
+        if (!session?.user?.id) {
+            return NextResponse.json(
+                {message:"Please login to place an order"},
+                {status:401}
+            )
+        }
         await connectDb()
-        const {userId,items,paymentMethod,totalAmount,address}=await req.json()
+        const {items,paymentMethod,totalAmount,address}=await req.json()
+        const userId = session.user.id // client par trust nahi, session se lo
         if(!items || !userId || !paymentMethod || !totalAmount || !address){
             return NextResponse.json(
                 {message:"please send all credentials"},
