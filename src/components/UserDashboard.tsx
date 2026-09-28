@@ -6,12 +6,14 @@ import Grocery from '@/app/Models/grocery.model'
 import Feedback from '@/app/Models/feedback.model'
 import GroceryItemCard from './GroceryItemCard'
 import { backfillProductNumbers } from '@/app/lib/productNumber'
+import { backfillStoreSlugs } from '@/app/lib/storeSlug'
 import type { IGrocery } from './GroceryItemCard'
 
 async function UserDashboard() {
   await connectDb()
   await backfillProductNumbers()
-  const groceries = await Grocery.find({}).populate('seller', 'name storeName image')
+  await backfillStoreSlugs()
+  const groceries = await Grocery.find({}).populate('seller', 'name storeName storeSlug image')
   const plainGrocery = JSON.parse(JSON.stringify(groceries))
 
   // Sellers jo is page par nazar aa rahe hain unki average rating nikal lete hain
