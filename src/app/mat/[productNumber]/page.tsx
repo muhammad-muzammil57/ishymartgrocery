@@ -48,8 +48,32 @@ async function ProductPage({ params }: { params: Promise<{ productNumber: string
   const user = session?.user?.id ? await User.findById(session.user.id) : null
   const plainUser = user ? JSON.parse(JSON.stringify(user)) : null
 
+  // Google ke liye product structured data (JSON-LD) — rich search result
+  // (naam, price, availability) dikhne ke chances behtar karta hai
+  const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://ishymart-grocery.vercel.app').replace(/\/$/, '')
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    image: product.image,
+    category: product.category,
+    url: `${siteUrl}/mat/${product.productNumber}`,
+    offers: {
+      '@type': 'Offer',
+      priceCurrency: 'PKR',
+      price: product.price,
+      availability: 'https://schema.org/InStock',
+      url: `${siteUrl}/mat/${product.productNumber}`,
+    },
+  }
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Nav user={plainUser} />
       <ProductDetail item={product} />
       <Footer />
